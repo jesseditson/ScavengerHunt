@@ -7,6 +7,7 @@ var mustache = require('./js/lib/mustache.js'),
 	models = require('./js/models'),
 	express = require('express'),
 	app = express.createServer(),
+	path = require("path"),
 	fs = require('fs'),
 	secret = 'mjolnir';
 	
@@ -104,14 +105,22 @@ function renderContent(res,view,info,template){
 	getFile(app.set('views') + '/' + view + '.html', function(html){
 		if(!template) template = "index.html";
 		if(!info) info = {};
-		res.render(template,{
-			locals: info,
-			partials: {
-				content: html.toString()
-			}
+		var jsFile = __dirname + '/js/viewjs/' + view + '.js';
+		path.exists(jsFile,function(exists){
+			if(exists) info.scripts = [view];
+			res.render(template,{
+				locals: info,
+				partials: {
+					content: html.toString()
+				}
+			});
 		});
 	});
 }
+
+/* FILES */
+app.use("/js", express.static(__dirname + '/js'));
+app.use("/css", express.static(__dirname + '/css'));
 
 /* USERS */
 
@@ -182,8 +191,22 @@ app.post('/register/do',function(req,res){
   });
 });
 
-app.get('/users',function(req,res){
-	
+app.get('/users',loadUser,function(req,res){
+	if(!req.currentUser.admin){
+		req.flash('error','You don\'t have priveledges to access this page.');
+		res.redirect('/');
+	}
+	User.find({},[], { sort: ['name', 'descending'] },function(err, users) {
+    	users = users.map(function(u) {
+      		return {
+				id: u._id,
+				name: u.name,
+				email: u.email,
+				admin: u.admin
+			};
+    	});
+    	renderContent(res, 'admin/users', { users : users });
+  	});
 });
 
 /* TASKS */
@@ -191,7 +214,7 @@ app.get('/users',function(req,res){
 /* PAGES */
 
 app.get('/', loadUser, function(req, res) {
-  
+  res.end('test');
 });
 
 if (!module.parent) {

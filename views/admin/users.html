@@ -1,0 +1,21 @@
+<h1>Users</h1>
+<ul id="userlist">
+	<li>
+		<ul>
+			<li data-row="name">Name</li>
+			<li data-row="email">Email</li>
+			<li data-row="admin">Admin?</li>
+			<li data-row="delete"></li>
+		</ul>
+	</li>
+	{{#users}}
+		<li>
+			<ul data-uid="{{id}}">
+				<li data-row="name">{{name}}</li>
+				<li data-row="email">{{email}}</li>
+				<li data-row="admin"><input type="checkbox" name="admin" {{#admin}}checked{{/admin}}/></li>
+				<li data-row="delete"><input type="button" value="delete"/></li>
+			</ul>
+		</li>
+	{{/users}}
+</ul>
