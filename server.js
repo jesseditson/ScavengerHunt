@@ -163,6 +163,7 @@ app.get('/register',function(req,res){
 app.post('/register/do',function(req,res){
 	var user = req.body;
 	function userSaveFailed(err) {
+		/// TODO: this throws header errors. huh?
 	    req.flash('error', err || 'Account creation failed');
 	    res.redirect('/register');
 	}
@@ -193,7 +194,6 @@ app.post('/register/do',function(req,res){
 
 app.get('/users',loadUser,function(req,res){
 	if(!req.currentUser.admin){
-		req.flash('error','You don\'t have priveledges to access this page.');
 		res.redirect('/');
 	}
 	User.find({},[], { sort: ['name', 'descending'] },function(err, users) {
@@ -208,8 +208,53 @@ app.get('/users',loadUser,function(req,res){
     	renderContent(res, 'admin/users', { users : users });
   	});
 });
+app.put('/users/:id.:format?',loadUser,function(req,res,next){
+	User.findOne({ _id: req.params.id}, function(err, u) {
+	    if (!u) res.send('false');
+		if (!req.currentUser.admin){
+			res.send('false');
+		}
+	    u.name = req.body.name;
+	    u.email = req.body.email;
+		u.admin = JSON.parse(req.body.admin); // must be bool
+		u.updating = true;
+
+	    u.save(function(err) {
+	      switch (req.params.format) {
+	        case 'json':
+	          res.send(u.toObject());
+	        break;
+
+	        default:
+	          req.flash('info', 'User updated');
+	          res.redirect('/users');
+	      }
+	    });
+	  });
+});
+app.del('/users/:id.:format?',loadUser,function(req,res){
+	User.findOne({ _id: req.params.id }, function(err, u) {
+	    if (!u) res.send('false');
+		if (!req.currentUser.admin){
+			res.send('false');
+		}
+	    u.remove(function() {
+	      switch (req.params.format) {
+	        case 'json':
+	          res.send('true');
+	        break;
+
+	        default:
+	          req.flash('info', 'User deleted');
+	          res.redirect('/users');
+	      } 
+	    });
+	  });
+})
 
 /* TASKS */
+
+
 
 /* PAGES */
 

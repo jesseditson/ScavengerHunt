@@ -74,6 +74,7 @@ function defineModels(mongoose, fn, secret) {
     .get(function() {
       return this._id.toHexString();
     });
+  User.virtual('updating').set(function(up){ this._updating = up;}).get(function(){return this._updating;});
 
   User.virtual('password')
     .set(function(password) {
@@ -100,7 +101,7 @@ function defineModels(mongoose, fn, secret) {
   });
 
   User.pre('save', function(next) {
-    if (!validatePresenceOf(this.password)) {
+    if (!validatePresenceOf(this.password) && !this.updating) {
       next(new Error('Invalid password'));
 	} else {
       next();
