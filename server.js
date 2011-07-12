@@ -351,9 +351,11 @@ app.put(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
 	Task.findOne({ _id:req.params[0]},function(err,t){
 		if(!t) res.send('wrong task');
 		if(subtask){
-			var exists = false;
+			var exists = false,
+				maxCompletions = 0;
 			for(var s=0;s<t.subTasks.length;s++){
 				if(t.subTasks[s].id == subtask){
+					maxCompletions = t.subTasks[s].maxCompletions;
 					exists = true;
 				}
 			}
@@ -367,6 +369,7 @@ app.put(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
 			}
 		}
 		if(subtask){
+			/// TODO: validate maxCompletions here
 			completion.subtasks.push(subtask);
 		}
 		completion.task = t.id;
