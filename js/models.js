@@ -50,6 +50,7 @@ function defineModels(mongoose, fn, secret) {
 	*/
 	Completions = new Schema({
 		'task':String,
+		'subtasks':[String],
 		'date':Date,
 		'media':[String]
 	});

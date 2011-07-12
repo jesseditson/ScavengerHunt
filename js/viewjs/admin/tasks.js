@@ -17,12 +17,26 @@ $(document).ready(function(){
 		});
 	});
 	
+	/// task deleting
+	$('input[value="delete"]').click(function(){
+		var task = $(this).closest('.task'),
+			id = task.find('[data-uid]').attr('data-uid');
+		$.ajax('/tasks/' + id + '.json', {
+			type : 'DELETE',
+			success : function(obj){
+				if(obj == 'true'){
+					task.remove();
+				}
+			}
+		});
+	});
+	
 	/// task adding
 	var createTask = function(obj){
 		var task = $('.task.template').clone().removeClass('template').show(),
 			fields = ['title','description','pointValue','subTasks'];
 		task.find('[data-uid]').attr({'data-uid':obj.id});
-		for(var f in fields){
+		for(var f=0;f<fields.length;f++){
 			task.find('[data-row="'+fields[f]+'"]').html(obj[fields[f]]);
 		}
 		$('#tasks_admin').append(task);

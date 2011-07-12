@@ -20,7 +20,7 @@ $(document).ready(function(){
 			data : info,
 			type : reqType,
 			success : function(obj){
-				if(obj == true && action == 'delete'){
+				if(obj == 'true' && action == 'delete'){
 					item.remove();
 				} else {
 					ssh.showFlash('updated successfuly!');
