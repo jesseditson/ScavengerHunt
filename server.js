@@ -46,6 +46,7 @@ app.configure(function(){
 models.defineModels(Mongo, function() {
   app.Task = Task = Mongo.model('Task');
   app.User = User = Mongo.model('User');
+  app.Completion = Completion = Mongo.model('Completion');
   app.LoginToken = LoginToken = Mongo.model('LoginToken');
   db = Mongo.connect(app.set('db-uri'));
 }, secret);
@@ -284,9 +285,7 @@ app.post('/tasks/create.:format?',loadAdmin,function(req,res){
 	        res.redirect('/tasks');
 	    }
 	}
-	console.log(req.rawBody);
 	var task = new Task(task);
-	console.log(task);
 
   task.save(function(err) {
     if (err) return taskSaveFailed(err);
@@ -303,6 +302,7 @@ app.post('/tasks/create.:format?',loadAdmin,function(req,res){
     }
   });
 });
+//// NOT USED YET:
 app.put('/tasks/:id.:format?',loadAdmin,function(req,res,next){
 	Task.findOne({ _id: req.params.id}, function(err, t) {
 	    if (!t) res.send('false');
@@ -343,10 +343,66 @@ app.del('/tasks/:id.:format?',loadAdmin,function(req,res){
 	  });
 })
 
+/* USER / TASK helpers */
+
+app.put(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
+	var user = req.currentUser,
+		subtask = req.params[1];
+	Task.findOne({ _id:req.params[0]},function(err,t){
+		if(!t) res.send('wrong task');
+		if(subtask){
+			var exists = false;
+			for(var s=0;s<t.subTasks.length;s++){
+				if(t.subTasks[s].id == subtask){
+					exists = true;
+				}
+			}
+			if(exists==false) res.send('wrong subtask');
+		}
+		var completion = {};
+		for(var c=0;c<user.completions.length;c++){
+			if(user.completions[c].task == t.id){
+				completion = user.completions[c];
+				break;
+			}
+		}
+		if(subtask){
+			completion.subtasks.push(subtask);
+		}
+		completion.task = t.id;
+		
+		if(!completion.date) {
+			var comp = new Completion(completion);
+			user.completions.push(comp);
+		}
+		user.updating = true;
+		user.save(function(err){
+			if(err){
+				res.send('false');
+			} else {
+				res.send(true);
+			}
+		});
+	});
+});
+
 /* PAGES */
 
 app.get('/', loadUser, function(req, res) {
-  res.end('test');
+	var user = req.currentUser;
+  	Task.find({},[], {},function(err, tasks) {
+    	tasks = tasks.map(function(t) {
+      		return {
+				id: t._id,
+				title: t.title,
+				description: t.description,
+				pointValue: t.pointValue,
+				subTasks: t.subTasks
+			};
+    	});
+		console.log(user);
+    	renderContent(res, 'home', { user : user, tasks : tasks });
+  	});
 });
 
 if (!module.parent) {

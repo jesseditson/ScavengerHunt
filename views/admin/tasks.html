@@ -28,7 +28,11 @@
 				<li data-row="title">{{title}}</li>
 				<li data-row="description">{{description}}</li>
 				<li data-row="pointValue">{{pointValue}}</li>
-				<li data-row="subTasks">{{subTasks}}</li>
+				<li data-row="subTasks">
+					{{#subTasks}}
+					<p>{{description}} - {{pointValue}} points, up to {{maxCompletions}} times.</p>
+					{{/subTasks}}
+				</li>
 				<li data-row="delete"><input type="button" name="delete" value="delete"/></li>
 			</ul>
 		</li>

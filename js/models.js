@@ -46,12 +46,12 @@ function defineModels(mongoose, fn, secret) {
     next();
   });
 	/**
-	* Model: Completions
+	* Model: Completion
 	*/
-	Completions = new Schema({
+	Completion = new Schema({
 		'task':String,
 		'subtasks':[String],
-		'date':Date,
+		'date':{type: Date, default: Date.now},
 		'media':[String]
 	});
   /**
@@ -66,7 +66,7 @@ function defineModels(mongoose, fn, secret) {
 	'name' : String,
     'hashed_password': String,
     'salt': String,
-	'completions':[Completions],
+	'completions':[Completion],
 	'admin':Boolean
   });
 
@@ -145,6 +145,7 @@ function defineModels(mongoose, fn, secret) {
 
   mongoose.model('Task', Task);
   mongoose.model('User', User);
+  mongoose.model('Completion',Completion);
   mongoose.model('LoginToken', LoginToken);
 
   fn();
