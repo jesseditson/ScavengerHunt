@@ -345,11 +345,12 @@ app.del('/tasks/:id.:format?',loadAdmin,function(req,res){
 
 /* USER / TASK helpers */
 
-app.put(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
+app.get(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
 	var user = req.currentUser,
-		subtask = req.params[1];
+		subtask = req.params[1],
+		response = false;
 	Task.findOne({ _id:req.params[0]},function(err,t){
-		if(!t) res.send('wrong task');
+		if(!t) response = 'wrong task';
 		if(subtask){
 			var exists = false,
 				maxCompletions = 0;
@@ -359,7 +360,7 @@ app.put(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
 					exists = true;
 				}
 			}
-			if(exists==false) res.send('wrong subtask');
+			if(exists==false) response = 'wrong subtask';
 		}
 		var completion = {};
 		for(var c=0;c<user.completions.length;c++){
@@ -370,7 +371,12 @@ app.put(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
 		}
 		if(subtask){
 			/// TODO: validate maxCompletions here
-			completion.subtasks.push(subtask);
+			var numCompletes = completion.subtasks.filter(function(el){return el == subtask;}).length;
+			if(numCompletes <= maxCompletions){
+				completion.subtasks.push(subtask);
+			} else {
+				response = 'max';
+			}
 		}
 		completion.task = t.id;
 		
