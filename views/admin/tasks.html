@@ -1,0 +1,45 @@
+<h1>Tasks</h1>
+<div>
+	<input type="text" name="title" placeholder="Task Title" />
+	<input type="tel" name="pointValue" placeholder="points" />
+	<textarea name="description" placeholder="description"></textarea>
+	<input type="button" value="add" id="add_button"/>
+	<input type="button" value="add subtask" id="add_subtask_button"/>
+</div>
+<div style="display:none;" class="subtask template">
+	<input type="text" placeholder="description" name="subtask_description_1"/>
+	<input type="tel" placeholder="points" name="subtask_pointValue_1"/>
+	<input type="tel" placeholder="max" name="subtask_maxCompletions_1"/>
+	<input type="button" class="subtask_delete_button" value="-"/>
+</div>
+<ul id="tasks_admin">
+	<li>
+		<ul>
+			<li data-row="title">Title</li>
+			<li data-row="description">Description</li>
+			<li data-row="pointValue">Point Value</li>
+			<li data-row="subTasks">Sub Tasks</li>
+			<li data-row="delete"></li>
+		</ul>
+	</li>
+	{{#tasks}}
+		<li class="task">
+			<ul data-uid="{{id}}">
+				<li data-row="title">{{title}}</li>
+				<li data-row="description">{{description}}</li>
+				<li data-row="pointValue">{{pointValue}}</li>
+				<li data-row="subTasks">{{subTasks}}</li>
+				<li data-row="delete"><input type="button" name="delete" value="delete"/></li>
+			</ul>
+		</li>
+	{{/tasks}}
+	<li style="display:none;" class="task template">
+		<ul data-uid="">
+			<li data-row="title"></li>
+			<li data-row="description"></li>
+			<li data-row="pointValue"></li>
+			<li data-row="subTasks"></li>
+			<li data-row="delete"><input type="button" name="delete" value="delete"/></li>
+		</ul>
+	</li>
+</ul>

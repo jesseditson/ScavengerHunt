@@ -23,8 +23,8 @@ $(document).ready(function(){
 				if(obj == true && action == 'delete'){
 					item.remove();
 				} else {
-					console.log(obj);
-					/// TODO: Update view with this object.
+					ssh.showFlash('updated successfuly!');
+					/// TODO: Update view with this object - not necessary currently
 				}
 			}
 		});

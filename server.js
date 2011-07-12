@@ -78,6 +78,17 @@ function authenticateFromLoginToken(req, res, next) {
   }));
 }
 
+function loadAdmin(req,res,next){
+	loadUser(req,res,function(){
+		if(req.currentUser.admin){
+			next();
+		} else {
+			req.flash('You do not have access for that page.');
+			res.redirect('/login');
+		}
+	});
+}
+
 function loadUser(req, res, next) {
   if (req.session.user_id) {
     User.findById(req.session.user_id, function(err, user) {
@@ -192,10 +203,7 @@ app.post('/register/do',function(req,res){
   });
 });
 
-app.get('/users',loadUser,function(req,res){
-	if(!req.currentUser.admin){
-		res.redirect('/');
-	}
+app.get('/users',loadAdmin,function(req,res){
 	User.find({},[], { sort: ['name', 'descending'] },function(err, users) {
     	users = users.map(function(u) {
       		return {
@@ -208,12 +216,9 @@ app.get('/users',loadUser,function(req,res){
     	renderContent(res, 'admin/users', { users : users });
   	});
 });
-app.put('/users/:id.:format?',loadUser,function(req,res,next){
+app.put('/users/:id.:format?',loadAdmin,function(req,res,next){
 	User.findOne({ _id: req.params.id}, function(err, u) {
 	    if (!u) res.send('false');
-		if (!req.currentUser.admin){
-			res.send('false');
-		}
 	    u.name = req.body.name;
 	    u.email = req.body.email;
 		u.admin = JSON.parse(req.body.admin); // must be bool
@@ -232,12 +237,9 @@ app.put('/users/:id.:format?',loadUser,function(req,res,next){
 	    });
 	  });
 });
-app.del('/users/:id.:format?',loadUser,function(req,res){
+app.del('/users/:id.:format?',loadAdmin,function(req,res){
 	User.findOne({ _id: req.params.id }, function(err, u) {
 	    if (!u) res.send('false');
-		if (!req.currentUser.admin){
-			res.send('false');
-		}
 	    u.remove(function() {
 	      switch (req.params.format) {
 	        case 'json':
@@ -250,11 +252,96 @@ app.del('/users/:id.:format?',loadUser,function(req,res){
 	      } 
 	    });
 	  });
-})
+});
 
 /* TASKS */
 
+app.get('/tasks',loadAdmin,function(req,res){
+	Task.find({},[], {},function(err, tasks) {
+    	tasks = tasks.map(function(t) {
+      		return {
+				id: t._id,
+				title: t.title,
+				description: t.description,
+				pointValue: t.pointValue,
+				subTasks: t.subTasks
+			};
+    	});
+    	renderContent(res, 'admin/tasks', { tasks : tasks });
+  	});
+});
+app.post('/tasks/create.:format?',loadAdmin,function(req,res){
+	var task = JSON.parse(req.body.info);
+	function taskSaveFailed(err) {
+		/// TODO: this throws header errors. huh?
+	    req.flash('error', err || 'Task Creation Failed.');
+	    switch (req.params.format) {
+	      case 'json':
+	        res.send("false");
+	      break;
 
+	      default:
+	        res.redirect('/tasks');
+	    }
+	}
+	console.log(req.rawBody);
+	var task = new Task(task);
+	console.log(task);
+
+  task.save(function(err) {
+    if (err) return taskSaveFailed(err);
+
+    req.flash('info', 'Task Created.');
+
+    switch (req.params.format) {
+      case 'json':
+        res.send(task.toObject());
+      break;
+
+      default:
+        res.redirect('/tasks');
+    }
+  });
+});
+app.put('/tasks/:id.:format?',loadAdmin,function(req,res,next){
+	Task.findOne({ _id: req.params.id}, function(err, t) {
+	    if (!t) res.send('false');
+		$.each(req.body,function(i){
+			if(t[i]){
+				t[i] = this;
+			}
+		});
+		console.log(t);
+
+	    t.save(function(err) {
+	      switch (req.params.format) {
+	        case 'json':
+	          res.send(t.toObject());
+	        break;
+
+	        default:
+	          req.flash('info', 'Task updated');
+	          res.redirect('/tasks');
+	      }
+	    });
+	  });
+});
+app.del('/tasks/:id.:format?',loadAdmin,function(req,res){
+	Task.findOne({ _id: req.params.id }, function(err, t) {
+	    if (!t) res.send('false');
+	    t.remove(function() {
+	      switch (req.params.format) {
+	        case 'json':
+	          res.send('true');
+	        break;
+
+	        default:
+	          req.flash('info', 'Task deleted');
+	          res.redirect('/tasks');
+	      } 
+	    });
+	  });
+})
 
 /* PAGES */
 

@@ -18,12 +18,12 @@ function defineModels(mongoose, fn, secret) {
 	/**
 	* Model: Subtask
 	*/
-	Subtasks = new Schema({
+	Subtask = new Schema({
 		'description':String,
 		'pointValue':Number,
 		'maxCompletions':Number
 	});
-	Subtasks.virtual('id')
+	Subtask.virtual('id')
 	    .get(function() {
 	      return this._id.toHexString();
 	    });
@@ -31,11 +31,10 @@ function defineModels(mongoose, fn, secret) {
     * Model: Task
     */
   Task = new Schema({
-	'taskID' : ObjectId,
     'title': { type: String, index: true },
     'description': String,
     'pointValue': Number,
-    'subTasks': [Subtasks]
+    'subTasks': [Subtask]
   });
 
   Task.virtual('id')
