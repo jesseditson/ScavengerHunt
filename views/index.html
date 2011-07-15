@@ -11,11 +11,13 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	
 	<!--<link rel="shortcut icon" href="/favicon.ico">
-	<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-	<link rel="stylesheet" href="css/style.css?v=2">-->
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png">-->
+	<link rel="stylesheet" href="css/style.css">
+	<link rel="stylesheet" href="css/uniform.aristo.css">
 	
 	<script src="/js/lib/jquery.js"></script>
 	<script src="/js/global.js"></script>
+	<script src="/js/lib/jquery.uniform.js"></script>
 	{{#scripts}}
 		<script src="/js/viewjs/{{.}}.js"></script>
 	{{/scripts}}
@@ -28,17 +30,9 @@
 		{{/flash}}
 	</div>
 	<div id="container">
-		<header>
-
-		</header>
-
 		<div id="main" role="main">
 			{{>content}}
 		</div>
-
-		<footer>
-
-		</footer>
 	</div>
 </body>
 </html>

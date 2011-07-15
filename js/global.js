@@ -1,4 +1,5 @@
 $(document).ready(function(){
+	ssh.uniformElements();
 	ssh.showFlash();
 });
 
@@ -16,5 +17,8 @@ var ssh = {
 				},800);
 			});
 		}
+	},
+	uniformElements:function(){
+		$("select, input:checkbox, input:radio, input:file").uniform();
 	}
 }

@@ -133,6 +133,8 @@ function renderContent(res,view,info,template){
 /* FILES */
 app.use("/js", express.static(__dirname + '/js'));
 app.use("/css", express.static(__dirname + '/css'));
+app.use("/img", express.static(__dirname + '/img'));
+app.use("/fonts", express.static(__dirname + '/fonts'));
 
 /* USERS */
 
@@ -348,9 +350,9 @@ app.del('/tasks/:id.:format?',loadAdmin,function(req,res){
 app.get(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
 	var user = req.currentUser,
 		subtask = req.params[1],
-		response = false;
+		error = false;
 	Task.findOne({ _id:req.params[0]},function(err,t){
-		if(!t) response = 'wrong task';
+		if(!t) error = 'wrong task';
 		if(subtask){
 			var exists = false,
 				maxCompletions = 0;
@@ -360,7 +362,7 @@ app.get(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
 					exists = true;
 				}
 			}
-			if(exists==false) response = 'wrong subtask';
+			if(exists==false) error = 'wrong subtask';
 		}
 		var completion = {};
 		for(var c=0;c<user.completions.length;c++){
@@ -375,7 +377,7 @@ app.get(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
 			if(numCompletes <= maxCompletions){
 				completion.subtasks.push(subtask);
 			} else {
-				response = 'max';
+				error = 'max';
 			}
 		}
 		completion.task = t.id;
@@ -386,8 +388,9 @@ app.get(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
 		}
 		user.updating = true;
 		user.save(function(err){
-			if(err){
-				res.send('false');
+			if(err || error){
+				if(!error) error = err;
+				res.send({'error':error});
 			} else {
 				res.send(true);
 			}
@@ -409,7 +412,7 @@ app.get('/', loadUser, function(req, res) {
 				subTasks: t.subTasks
 			};
     	});
-		console.log(user);
+		console.log(user,tasks);
     	renderContent(res, 'home', { user : user, tasks : tasks });
   	});
 });

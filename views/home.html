@@ -1,0 +1,32 @@
+<ul id="tasklist">
+	{{#tasks}}
+		<li data-id="{{id}}">
+			<div class="title_row">
+				<input type="checkbox" name="complete"/>
+				<span>{{title}}</span>
+				<div class="pointValue">
+					+{{pointValue}}
+				</div>
+				<div class="pulldown_button expand">
+					<span class="arrow-down"></span>
+				</div>
+			</div>
+			<div class="pulldown_container">
+				<div class="description">
+					<p>{{description}}</p>
+				</div>
+				<ul class="subtasks">
+					{{#subTasks}}
+						<li class="subtask">
+							<input type="number" min="0" max="{{maxCompletions}}" step="1" value="0" size=3 >
+							<span> X {{description}}</span>
+							<div class="pointValue">
+								+{{pointValue}}
+							</div>
+						</li>
+					{{/subTasks}}
+				</ul>
+			</div>
+		</li>
+	{{/tasks}}
+</ul>
