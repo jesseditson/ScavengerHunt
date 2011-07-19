@@ -14,16 +14,29 @@
 	<link rel="apple-touch-icon" href="/apple-touch-icon.png">-->
 	<link rel="stylesheet" href="css/style.css">
 	<link rel="stylesheet" href="css/uniform.aristo.css">
+	{{#user}}
+		{{#admin}}<link rel="stylesheet" href="css/admin.css">{{/admin}}
+	{{/user}}
 	
 	<script src="/js/lib/jquery.js"></script>
 	<script src="/js/global.js"></script>
 	<script src="/js/lib/jquery.uniform.js"></script>
+	<!--Load the AJAX API-->
+	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	<script>
+		google.load("visualization", "1", {packages:["corechart"]});
+		google.setOnLoadCallback(googleLoaded);
+		function googleLoaded(){
+			ssh.googleReady = true;
+		}
+	</script>
 	{{#scripts}}
 		<script src="/js/viewjs/{{.}}.js"></script>
 	{{/scripts}}
 
 </head>
 <body>
+	{{>header}}
 	<div id="flash">
 		{{#flash}}
 			<h3>{{.}}</h3>

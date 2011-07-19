@@ -113,21 +113,67 @@ function getFile(fileName,callback){
 	  callback(data);
 	});
 }
-function renderContent(res,view,info,template){
-	getFile(app.set('views') + '/' + view + '.html', function(html){
-		if(!template) template = "index.html";
-		if(!info) info = {};
+function renderContent(req,res,view,info,template){
+	var doRender = function(res,view,info,template,html,header){
 		var jsFile = __dirname + '/js/viewjs/' + view + '.js';
 		path.exists(jsFile,function(exists){
 			if(exists) info.scripts = [view];
 			res.render(template,{
 				locals: info,
 				partials: {
-					content: html.toString()
+					content: html.toString(),
+					header: header.toString()
 				}
 			});
 		});
+	}
+	getFile(app.set('views') + '/' + view + '.html', function(html){
+		getFile(app.set('views') + '/header.html', function(header){
+			if(!template) template = "index.html";
+			if(!info) info = {};
+			if(req.currentUser){
+				info.user = req.currentUser;
+				getPoints(info.user,function(points){
+					info.user.points = points;
+					doRender(res,view,info,template,html,header);
+				});
+			} else {
+				doRender(res,view,info,template,html,header);
+			}
+		});
 	});
+}
+/* User calculation functions */
+function getPoints(user,callback){
+	var points = 0,
+		numTasks = user.completions.length,
+		doneTasks = 0,
+		doReturn = function(numTasks, doneTasks, points){
+			doneTasks ++;
+			if(doneTasks == numTasks){
+				callback(points);
+			}
+			return doneTasks;
+		};
+	if(!numTasks) callback(points);
+	for(var c = 0; c<numTasks; c++){
+		var completion = user.completions[c];
+		Task.findById(completion.task,function(err,task){
+			if(task){
+				points += task.pointValue;
+				if(completion.subtasks.length && task.subTasks.length){
+					for(var s=0;s<task.subTasks.length; s++){
+						var subtask = task.subTasks[s],
+							numCompletions = completion.subtasks.filter(function(el){return el == subtask.id;}).length
+						points += subtask.pointValue * numCompletions;
+					}
+				}
+				doneTasks = doReturn(numTasks,doneTasks,points);
+			} else {
+				doneTasks = doReturn(numTasks,doneTasks,points);
+			}
+		});
+	}
 }
 
 /* FILES */
@@ -139,7 +185,7 @@ app.use("/fonts", express.static(__dirname + '/fonts'));
 /* USERS */
 
 app.get('/login', function(req,res){
-	renderContent(res,'login',{'flash':req.flash('error')});
+	renderContent(req,res,'login',{'flash':req.flash('error')});
 });
 app.post('/login/do',function(req,res){
 	User.findOne({ email: req.body.email }, function(err, user) {
@@ -172,7 +218,7 @@ app.get('/logout', loadUser, function(req, res) {
 });
 
 app.get('/register',function(req,res){
-	renderContent(res,'register',{'flash':req.flash('error')});
+	renderContent(req,res,'register',{'flash':req.flash('error')});
 });
 app.post('/register/do',function(req,res){
 	var user = req.body;
@@ -216,7 +262,7 @@ app.get('/users',loadAdmin,function(req,res){
 				admin: u.admin
 			};
     	});
-    	renderContent(res, 'admin/users', { users : users });
+    	renderContent(req,res, 'admin/users', { users : users });
   	});
 });
 app.put('/users/:id.:format?',loadAdmin,function(req,res,next){
@@ -270,7 +316,7 @@ app.get('/tasks',loadAdmin,function(req,res){
 				subTasks: t.subTasks
 			};
     	});
-    	renderContent(res, 'admin/tasks', { tasks : tasks });
+    	renderContent(req,res, 'admin/tasks', { tasks : tasks });
   	});
 });
 app.post('/tasks/create.:format?',loadAdmin,function(req,res){
@@ -347,7 +393,7 @@ app.del('/tasks/:id.:format?',loadAdmin,function(req,res){
 
 /* USER / TASK helpers */
 
-app.get(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
+app.put(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
 	var user = req.currentUser,
 		subtask = req.params[1],
 		error = false;
@@ -372,17 +418,17 @@ app.get(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
 			}
 		}
 		if(subtask){
-			/// TODO: validate maxCompletions here
 			var numCompletes = completion.subtasks.filter(function(el){return el == subtask;}).length;
 			if(numCompletes <= maxCompletions){
 				completion.subtasks.push(subtask);
+				numCompletes ++;
 			} else {
 				error = 'max';
 			}
 		}
 		completion.task = t.id;
 		
-		if(!completion.date) {
+		if(!completion.date && !subtask) {
 			var comp = new Completion(completion);
 			user.completions.push(comp);
 		}
@@ -392,10 +438,43 @@ app.get(/^\/tasks\/do\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
 				if(!error) error = err;
 				res.send({'error':error});
 			} else {
-				res.send(true);
+				getPoints(user,function(points){
+					res.send({'success':true,'userPoints':points,'subPoints':numCompletes});
+				})
 			}
 		});
 	});
+});
+
+
+app.del(/^\/tasks\/undo\/([^\/]+)\/?([^\/]+)?/,loadUser,function(req,res){
+	var user = req.currentUser,
+		subtask = req.params[1],
+		taskID = req.params[0],
+		error = false;
+	for(var c=0;c<user.completions.length;c++){
+		var completion = user.completions[c];
+		if(completion.task == taskID){
+			if(subtask){
+				if(completion.subtasks.indexOf(subtask) > -1) completion.subtasks.splice(completion.subtasks.indexOf(subtask),1);
+				var subPoints = completion.subtasks.filter(function(n){return n==subtask;}).length;
+			} else {
+				user.completions.splice(c,1);
+			}
+			user.updating = true;
+			user.save(function(err){
+				if(err || error){
+					if(!error) error = err;
+					res.send({'error':error});
+				} else {
+					getPoints(user,function(points){
+						res.send({'success':true,'userPoints':points,'subPoints':subPoints});
+					})
+				}
+			});
+			break;
+		}
+	}
 });
 
 /* PAGES */
@@ -404,18 +483,114 @@ app.get('/', loadUser, function(req, res) {
 	var user = req.currentUser;
   	Task.find({},[], {},function(err, tasks) {
     	tasks = tasks.map(function(t) {
+			if(t.subTasks.length){
+				for(var st=0;st<t.subTasks.length;st++){
+					t.subTasks[st].numCompletes = function(){
+						var num = 0,
+							id = this.id;
+						for(var ut=0;ut<user.completions.length;ut++){
+							num = user.completions[ut].subtasks.filter(function(sub){
+								return (sub==id); }).length;
+						}
+						return num;
+					}
+				}
+			}
       		return {
-				id: t._id,
+				id: t.id,
 				title: t.title,
 				description: t.description,
 				pointValue: t.pointValue,
-				subTasks: t.subTasks
+				subTasks: t.subTasks,
+				isComplete: function(){
+					for(var ut=0;ut<user.completions.length;ut++){
+						if(user.completions[ut].task == this.id){
+							return true;
+						}
+					}
+					return false;
+				}
 			};
     	});
-		console.log(user,tasks);
-    	renderContent(res, 'home', { user : user, tasks : tasks });
+    	renderContent(req,res, 'home', { user : user, tasks : tasks });
   	});
 });
+
+/* DASHBOARD */
+
+app.get('/dashboard',loadUser,function(req,res){
+	var dateTime = function(d){ return new Date(d).getTime(); },
+		dateToString = function(d){
+			var da = new Date(d);
+			return (pad(da.getFullYear(),4) + pad(da.getMonth(),2) + pad(da.getDate(),2));
+		},
+		userPoints = {},
+		usersLeft = 0,
+		rendered = false;
+		tryDone = function(){
+			if(usersLeft == 0 && rendered == false){
+				rendered = true;
+				renderContent(req,res,'dashboard',{'userPoints':JSON.stringify(userPoints)});
+			}
+		}
+	User.find({},['name','completions'],{},function(err,users){
+		if(!err){
+			for(var u=0;u<users.length;u++){
+				var userTaskDays = {};
+				if(users[u].completions && users[u].completions.length){
+					var tasks = users[u].completions.sort(function(a,b){
+						return dateTime(a.date) - dateTime(b.date);
+					});
+					for(var t=0;t<tasks.length;t++){
+						usersLeft ++;
+						var tsk = tasks[t]
+							user = users[u].name,
+							dateString = dateToString(tsk.date);
+						userPoints[dateString] = userPoints[dateString] || {};
+						getPointWorth(tsk.task, tsk.subtasks, user, dateString, function(points,user,dateString){
+							userPoints[dateString][user] = userPoints[dateString][user] || 0;
+							userPoints[dateString][user] += points;
+							usersLeft --;
+							tryDone();
+						});
+					}
+				}
+			}
+		}
+	});
+});
+
+//// UTILITIES
+function getPointWorth(taskId,subtasks,user,dateString, callback){
+	Task.find({'_id':taskId},['pointValue','subTasks'],{},function(err,tasks){
+		if(err || !tasks.length){
+			callback(0,user,dateString);
+		} else {
+			var subTaskPoints = 0,
+				task = tasks[0];
+			for(var s=0;s<task.subTasks.length;s++){
+				var id = task.subTasks[s].id;
+				if(subtasks.indexOf(id) > -1){
+					subTaskPoints = (subtasks.filter(function(st){ return st == id; }).length * task.subTasks[s].pointValue);
+				}
+			}
+			var taskPoints = task.pointValue + subTaskPoints;
+			callback(taskPoints,user,dateString);
+		}
+	});
+}
+
+//// HELPERS - hnmmmm, this is lame...
+function pad(number, length) {
+   
+    var str = '' + number;
+    while (str.length < length) {
+        str = '0' + str;
+    }
+   
+    return str;
+
+}
 
 if (!module.parent) {
   app.listen(80);

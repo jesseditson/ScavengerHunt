@@ -1,0 +1,41 @@
+#admin ul {
+	overflow:auto;
+	padding: 10px 0px;
+	background-color:#f2f2f2;
+}
+#admin ul li{
+	padding: 0px 10px;
+	margin: 0px;
+	width: 80px;
+	min-height:10px;
+	float:left;
+}
+#admin > li{
+	min-height: 10px;
+	overflow:auto;
+}
+#admin_tasks_form {
+	overflow:auto;
+	background:#FCFFF4;
+	padding: 20px;
+}
+#admin_tasks_form input {
+	font-size:18px;
+	clear:both;
+	float:left;
+	width:450px;
+}
+#admin_tasks_form input[type=button] {
+	font-size: 20px;
+	float:left;
+	clear:none;
+	width:450px;
+}
+#admin_tasks_form textarea {
+	width:450px;
+	height: 100px;
+}
+
+#admin ul li[data-row="email"] {
+	width: 250px;
+}

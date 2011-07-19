@@ -1,0 +1,15 @@
+<header>
+	<a href="/"><h1>Summer Scavenger Hunt MMXI</h1></a>
+	<ul id="userMenu">
+		{{#user}}
+			<li class="userbox">{{name}} - {{points}} points</li>
+			<li><a href="/">tasks</a></li>
+			<li>|</li>
+			<li><a href="dashboard">dashboard</a></li>
+		{{/user}}
+		{{^user}}
+			<li><a href="/login">log in</a></li>
+			<li><a href="/register"> - register</a></li>
+		{{/user}}
+	</ul>
+</header>

@@ -1,18 +1,18 @@
 <h1>Tasks</h1>
-<div>
+<div id="admin_tasks_form">
 	<input type="text" name="title" placeholder="Task Title" />
 	<input type="tel" name="pointValue" placeholder="points" />
 	<textarea name="description" placeholder="description"></textarea>
 	<input type="button" value="add" id="add_button"/>
 	<input type="button" value="add subtask" id="add_subtask_button"/>
 </div>
-<div style="display:none;" class="subtask template">
+<div style="display:none;" class="admin_subtask template">
 	<input type="text" placeholder="description" name="subtask_description_1"/>
 	<input type="tel" placeholder="points" name="subtask_pointValue_1"/>
 	<input type="tel" placeholder="max" name="subtask_maxCompletions_1"/>
-	<input type="button" class="subtask_delete_button" value="-"/>
+	<input type="button" class="subtask_delete_button" value="remove subtask"/>
 </div>
-<ul id="tasks_admin">
+<ul id="admin">
 	<li>
 		<ul>
 			<li data-row="title">Title</li>

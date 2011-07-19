@@ -1,8 +1,8 @@
 $(document).ready(function(){
 	/// subtask adding
 	$('#add_subtask_button').click(function(){
-		var subtaskForm = $('.subtask.template').clone().removeClass('template').show(),
-			numSubTasks = $(this).closest('div').find('.subtask').length;
+		var subtaskForm = $('.admin_subtask.template').clone().removeClass('template').show(),
+			numSubTasks = $(this).closest('div').find('.admin_subtask').length;
 		subtaskForm.find('input').each(function(){
 			var i = $(this),
 				name = i.attr('name');
@@ -13,7 +13,7 @@ $(document).ready(function(){
 		});
 		$(this).closest('div').append(subtaskForm);
 		subtaskForm.find('.subtask_delete_button').click(function(){
-			$(this).closest('.subtask').remove();
+			$(this).closest('.admin_subtask').remove();
 		});
 	});
 	
@@ -44,7 +44,7 @@ $(document).ready(function(){
 	
 	$('#add_button').click(function(){
 		var inputs = $(this).closest('div').children('input:not([type=button]),textarea'),
-			subTasks = $(this).closest('div').find('.subtask input:not([type=button])'),
+			subTasks = $(this).closest('div').find('.admin_subtask input:not([type=button])'),
 			info = {
 				subTasks : []
 			};

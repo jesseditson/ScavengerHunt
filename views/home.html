@@ -1,32 +1,37 @@
-<ul id="tasklist">
-	{{#tasks}}
-		<li data-id="{{id}}">
-			<div class="title_row">
-				<input type="checkbox" name="complete"/>
-				<span>{{title}}</span>
-				<div class="pointValue">
-					+{{pointValue}}
+<div id="searchbox">
+	<input type="text" placeholder="What did you do?"/>
+</div>
+<div id="task_container">
+	<ul id="tasklist">
+		{{#tasks}}
+			<li class="task" data-id="{{id}}" selected="{{isComplete}}">
+				<div class="title_row">
+					<input type="checkbox" class="task_checkbox" name="complete" {{#isComplete}}checked{{/isComplete}}/>
+					<span class="taskTitle">{{title}}</span>
+					<div class="pointValue">
+						+{{pointValue}}
+					</div>
+					<div class="pulldown_button expand">
+						<span class="arrow-down"></span>
+					</div>
 				</div>
-				<div class="pulldown_button expand">
-					<span class="arrow-down"></span>
+				<div class="pulldown_container">
+					<div class="description">
+						<p>{{description}}</p>
+					</div>
+					<ul class="subtasks">
+						{{#subTasks}}
+							<li class="subtask" data-id="{{id}}">
+								<input data-prev="{{numCompletes}}" type="number" min="0" max="{{maxCompletions}}" step="1" value="{{numCompletes}}" size=3 >
+								<span> x {{description}}</span>
+								<div class="pointValue">
+									+{{pointValue}}
+								</div>
+							</li>
+						{{/subTasks}}
+					</ul>
 				</div>
-			</div>
-			<div class="pulldown_container">
-				<div class="description">
-					<p>{{description}}</p>
-				</div>
-				<ul class="subtasks">
-					{{#subTasks}}
-						<li class="subtask">
-							<input type="number" min="0" max="{{maxCompletions}}" step="1" value="0" size=3 >
-							<span> X {{description}}</span>
-							<div class="pointValue">
-								+{{pointValue}}
-							</div>
-						</li>
-					{{/subTasks}}
-				</ul>
-			</div>
-		</li>
-	{{/tasks}}
-</ul>
+			</li>
+		{{/tasks}}
+	</ul>
+</div>
