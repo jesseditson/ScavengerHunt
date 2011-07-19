@@ -593,7 +593,7 @@ function pad(number, length) {
 }
 
 if (!module.parent) {
-  app.listen(80);
+  app.listen(8080);
   console.log('Express server listening on port %d, environment: %s', app.address().port, app.settings.env)
   //console.log('Using connect %s, Express %s, Jade %s', connect.version, express.version, jade.version);
 }
